@@ -197,6 +197,7 @@ async def maybe_run_team(
     *,
     message: str,
     context_messages: List[Dict],
+    team_id: Optional[str] = None,
     preferred_provider: Optional[str] = None,
     user_id: Optional[str] = None,
     user_api_keys: Optional[Dict[str, str]] = None,
@@ -214,8 +215,9 @@ async def maybe_run_team(
     
     _init_engines()
     
-    # Check for predefined team triggers
-    team_id = team_engine.should_use_team(message)
+    # Check for predefined team triggers (use caller-provided team_id if given)
+    if not team_id:
+        team_id = team_engine.should_use_team(message)
     
     # If no predefined team, check for dynamic team composition
     if not team_id:

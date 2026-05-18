@@ -66,15 +66,25 @@ class CanonicalRouter:
             keys = self._user_keys()
         clean_keys = {k: v for k, v in (keys or {}).items() if not k.startswith("__")} or None
 
+        messages = _to_messages(message, context)
+        # Attach images to the last user message if present
+        if images and messages:
+            last_msg = messages[-1]
+            if last_msg.get("role") == "user":
+                content_parts = [{"type": "text", "text": last_msg["content"]}]
+                for img in images:
+                    url = img.get("url") or img.get("base64_data") or ""
+                    if url:
+                        content_parts.append({"type": "image_url", "image_url": {"url": url}})
+                last_msg["content"] = content_parts
+
         req = LLMRequest(
-            messages=_to_messages(message, context),
+            messages=messages,
             provider=preferred_provider,
             model=preferred_model,
-            user_api_keys=clean_keys,
-            images=images,
         )
         try:
-            resp = await self._client.complete(req)
+            resp = await self._client.complete(req, user_keys=clean_keys)
         except Exception as e:
             logger.exception("CanonicalRouter.route_query failed")
             return {
