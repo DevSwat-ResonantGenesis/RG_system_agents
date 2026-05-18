@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+asyncpg
+pydantic
+pydantic-settings
+httpx
+numpy
+scikit-learn
+sentence-transformers>=3.0.0
+tiktoken>=0.5.0
