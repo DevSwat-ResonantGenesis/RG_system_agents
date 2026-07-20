@@ -464,6 +464,10 @@ async def execute_code(
     code_exec_url = os.getenv(
         "CODE_EXECUTION_URL", "http://code_execution_service:8002"
     )
+    # code_execution_service requires this on every route (see its app/security.py) —
+    # without it, any container reachable on app-network could run arbitrary shell
+    # commands there (it has /var/run/docker.sock mounted for its own sandboxing).
+    code_exec_internal_key = os.getenv("CODE_EXECUTION_INTERNAL_SERVICE_KEY", "")
     payload: Dict[str, Any] = {
         "code": code,
         "language": (language or "python").lower(),
@@ -478,6 +482,7 @@ async def execute_code(
             resp = await client.post(
                 f"{code_exec_url}/code/execute",
                 json=payload,
+                headers={"x-internal-service-key": code_exec_internal_key},
             )
             data = resp.json() if resp.content else {}
     except Exception as e:
